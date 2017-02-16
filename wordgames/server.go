@@ -10,6 +10,10 @@ type Server struct {
     clients map[string]*Client
 }
 
+func NewServer() Server {
+    return Server { make(map[string]*Client) }
+}
+
 func (server *Server) Register(client *Client) {
     server.clients[client.Name] = client
 }
