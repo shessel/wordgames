@@ -25,6 +25,8 @@ func (server *Server) Register(client *Client) {
 }
 
 func (server *Server) Unregister(client *Client) {
+    client.SendMessage("Server shutting down")
+    client.Disconnect()
     delete(server.clients, client.Name)
 }
 

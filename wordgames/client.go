@@ -12,3 +12,7 @@ type Client struct {
 func (client *Client) SendMessage(message string) (err error) {
     return client.conn.WriteMessage(websocket.TextMessage, []byte(message))
 }
+
+func (client *Client) Disconnect() {
+    client.conn.Close()
+}
