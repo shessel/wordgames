@@ -67,3 +67,9 @@ func (server *Server) Start() {
     http.HandleFunc("/", server.NewConnection)
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
+
+func (server *Server) Stop() {
+    for _, client := range server.clients {
+        server.Unregister(client)
+    }
+}
