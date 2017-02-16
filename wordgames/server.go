@@ -64,8 +64,15 @@ func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) Start() {
+    go server.run()
     http.HandleFunc("/", server.NewConnection)
     log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func (server *Server) run() {
+    for {
+        server.Broadcast(<- server.input)
+    }
 }
 
 func (server *Server) Stop() {
