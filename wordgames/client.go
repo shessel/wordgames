@@ -1,8 +1,14 @@
 package wordgames
 
-import "github.com/gorilla/websocket"
+import (
+    "github.com/gorilla/websocket"
+)
 
 type Client struct {
     Name string
-    Conn websocket.Conn
+    conn* websocket.Conn
+}
+
+func (client *Client) SendMessage(message string) (err error) {
+    return client.conn.WriteMessage(websocket.TextMessage, []byte(message))
 }

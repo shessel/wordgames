@@ -30,6 +30,14 @@ var upgrader = websocket.Upgrader{
     },
 }
 
+func (server *Server) Broadcast(message string) {
+    for _, client := range server.clients {
+        if err := client.SendMessage(message); err != nil {
+            log.Print("Error sending message to client " + client.Name)
+        }
+    }
+}
+
 func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
     conn, err := upgrader.Upgrade(w, r, nil)
     if err != nil {
@@ -37,12 +45,17 @@ func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
         return
     }
     defer conn.Close()
-    messageType, message, err := conn.ReadMessage()
+
+    _, message, err := conn.ReadMessage()
     if err != nil {
         log.Print("read:", err)
         return
     }
-    if err = conn.WriteMessage(messageType, message); err != nil {
+    client := Client{string(message), conn}
+    server.Broadcast(client.Name + " logged in")
+    server.clients[client.Name] = &client
+
+    if err = client.SendMessage("You are now logged in as " + client.Name); err != nil {
         log.Print("write:", err)
         return
     }
