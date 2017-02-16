@@ -8,10 +8,11 @@ import (
 
 type Server struct {
     clients map[string]*Client
+    input chan string
 }
 
 func NewServer() Server {
-    return Server { make(map[string]*Client) }
+    return Server { make(map[string]*Client), make(chan string) }
 }
 
 func (server *Server) Register(client *Client) {
@@ -59,7 +60,7 @@ func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    server.Register(&Client{string(message), conn})
+    server.Register(NewClient(string(message), conn, server.input))
 }
 
 func (server *Server) Start() {
