@@ -15,7 +15,13 @@ func NewServer() Server {
 }
 
 func (server *Server) Register(client *Client) {
+    server.Broadcast(client.Name + " logged in")
     server.clients[client.Name] = client
+
+    if err := client.SendMessage("You are now logged in as " + client.Name); err != nil {
+        log.Print("write:", err)
+        return
+    }
 }
 
 func (server *Server) Unregister(client *Client) {
@@ -51,14 +57,8 @@ func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
         log.Print("read:", err)
         return
     }
-    client := Client{string(message), conn}
-    server.Broadcast(client.Name + " logged in")
-    server.clients[client.Name] = &client
 
-    if err = client.SendMessage("You are now logged in as " + client.Name); err != nil {
-        log.Print("write:", err)
-        return
-    }
+    server.Register(&Client{string(message), conn})
 }
 
 func (server *Server) Start() {
