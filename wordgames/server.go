@@ -52,7 +52,6 @@ func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
         log.Print("upgrade:", err)
         return
     }
-    defer conn.Close()
 
     _, message, err := conn.ReadMessage()
     if err != nil {
