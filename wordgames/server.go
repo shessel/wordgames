@@ -58,18 +58,20 @@ func (server *Server) Broadcast(message string) {
 
 func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
     conn, err := upgrader.Upgrade(w, r, nil)
-    if err != nil {
-        log.Print("upgrade:", err)
-        return
-    }
+    if checkError(err, "upgrade:") {return}
 
     _, message, err := conn.ReadMessage()
-    if err != nil {
-        log.Print("read:", err)
-        return
-    }
+    if checkError(err, "read:") {return}
 
     server.Register(NewClient(string(message), conn, server.input))
+}
+
+func checkError(err error, message string) bool {
+    ret := err != nil
+    if ret {
+        log.Print(message, err)
+    }
+    return ret;
 }
 
 func (server *Server) Start() {
