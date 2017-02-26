@@ -13,7 +13,6 @@ type Client struct {
 
 func NewClient(name string, conn *websocket.Conn, toServer chan Message) *Client {
     client := &Client{ html.EscapeString(name), conn, toServer }
-    go client.run()
     return client
 }
 

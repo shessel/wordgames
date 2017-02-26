@@ -15,7 +15,7 @@ func NewServer() Server {
     return Server { make(map[string]*Client), make(chan Message) }
 }
 
-func (server *Server) Register(client *Client) {
+func (server *Server) RegisterClient(client *Client) {
     _, exists := server.clients[client.Name]
     if exists {
         err := client.SendMessage(client.Name + " is already logged in")
@@ -29,10 +29,15 @@ func (server *Server) Register(client *Client) {
     }
 }
 
-func (server *Server) Unregister(client *Client) {
+func (server *Server) UnregisterClient(client *Client) {
     client.SendMessage("Server shutting down")
     client.Disconnect()
     delete(server.clients, client.Name)
+}
+
+func (server *Server) runClient(client *Client) {
+    client.run()
+    server.UnregisterClient(client)
 }
 
 var upgrader = websocket.Upgrader{
@@ -58,7 +63,9 @@ func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
     _, message, err := conn.ReadMessage()
     if checkError(err, "read:") {return}
 
-    server.Register(NewClient(string(message), conn, server.input))
+    client := NewClient(string(message), conn, server.input)
+    server.RegisterClient(client)
+    server.runClient(client)
 }
 
 func checkError(err error, message string) bool {
@@ -84,6 +91,6 @@ func (server *Server) run() {
 
 func (server *Server) Stop() {
     for _, client := range server.clients {
-        server.Unregister(client)
+        server.UnregisterClient(client)
     }
 }
