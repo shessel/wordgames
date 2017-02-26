@@ -15,21 +15,21 @@ func NewServer() Server {
     return Server { make(map[string]*Client), make(chan Message) }
 }
 
-func (server *Server) RegisterClient(client *Client) {
+func (server *Server) registerClient(client *Client) {
     _, exists := server.clients[client.Name]
     if exists {
         err := client.SendMessage(client.Name + " is already logged in")
         if checkError(err, "write:") {return}
         client.Disconnect()
     } else {
-        server.Broadcast(client.Name + " logged in")
+        server.broadcast(client.Name + " logged in")
         server.clients[client.Name] = client
         err := client.SendMessage("You are now logged in as " + client.Name)
         if checkError(err, "write:") {return}
     }
 }
 
-func (server *Server) UnregisterClient(client *Client) {
+func (server *Server) unregisterClient(client *Client) {
     client.SendMessage("Server shutting down")
     client.Disconnect()
     delete(server.clients, client.Name)
@@ -37,7 +37,7 @@ func (server *Server) UnregisterClient(client *Client) {
 
 func (server *Server) runClient(client *Client) {
     client.run()
-    server.UnregisterClient(client)
+    server.unregisterClient(client)
 }
 
 var upgrader = websocket.Upgrader{
@@ -48,7 +48,7 @@ var upgrader = websocket.Upgrader{
     },
 }
 
-func (server *Server) Broadcast(message string) {
+func (server *Server) broadcast(message string) {
     for _, client := range server.clients {
         if err := client.SendMessage(message); err != nil {
             log.Print("Error sending message to client " + client.Name)
@@ -64,7 +64,7 @@ func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
     if checkError(err, "read:") {return}
 
     client := NewClient(string(message), conn, server.input)
-    server.RegisterClient(client)
+    server.registerClient(client)
     server.runClient(client)
 }
 
@@ -85,12 +85,12 @@ func (server *Server) Start() {
 func (server *Server) run() {
     for {
         message := <- server.input
-        server.Broadcast(message.Message)
+        server.broadcast(message.Message)
     }
 }
 
 func (server *Server) Stop() {
     for _, client := range server.clients {
-        server.UnregisterClient(client)
+        server.unregisterClient(client)
     }
 }
