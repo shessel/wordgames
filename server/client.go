@@ -23,7 +23,7 @@ func (client *Client) run() {
         if err != nil {
             break;
         }
-        client.toServer <- html.EscapeString(string(message))
+        client.toServer <- client.Name + ": " + html.EscapeString(string(message))
     }
 }
 
