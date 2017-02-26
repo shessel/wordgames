@@ -85,7 +85,7 @@ func (server *Server) Start() {
 func (server *Server) run() {
     for {
         message := <- server.input
-        server.broadcast(message.Message)
+        server.broadcast(message.Text)
     }
 }
 

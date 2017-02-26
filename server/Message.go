@@ -1,6 +1,6 @@
 package server
 
 type Message struct {
-    Message string
+    Text string
     Client *Client
 }
