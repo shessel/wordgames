@@ -1,4 +1,4 @@
-package wordgames
+package server
 
 import (
     "github.com/gorilla/websocket"

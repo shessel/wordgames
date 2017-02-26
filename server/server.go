@@ -1,4 +1,4 @@
-package wordgames
+package server
 
 import (
     "log"
@@ -18,19 +18,14 @@ func NewServer() Server {
 func (server *Server) Register(client *Client) {
     _, exists := server.clients[client.Name]
     if exists {
-        if err := client.SendMessage(client.Name + " is already logged in"); err != nil {
-            log.Print("write:", err)
-            return
-        }
+        err := client.SendMessage(client.Name + " is already logged in")
+        if checkError(err, "write:") {return}
         client.Disconnect()
     } else {
         server.Broadcast(client.Name + " logged in")
         server.clients[client.Name] = client
-
-        if err := client.SendMessage("You are now logged in as " + client.Name); err != nil {
-            log.Print("write:", err)
-            return
-        }
+        err := client.SendMessage("You are now logged in as " + client.Name)
+        if checkError(err, "write:") {return}
     }
 }
 

@@ -1,8 +1,8 @@
 package main
 
-import "github.com/shessel/wordgames/wordgames"
+import "github.com/shessel/wordgames/server"
 
 func main() {
-    server := wordgames.NewServer()
+    server := server.NewServer()
     server.Start()
 }
