@@ -38,7 +38,7 @@ func (server *Server) Stop() {
 func (server *Server) run() {
     for {
         message := <- server.input
-        server.broadcast(message.Text)
+        server.broadcast(message.Client.Name + ": " + message.Text)
     }
 }
 
