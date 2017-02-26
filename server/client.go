@@ -1,6 +1,7 @@
 package server
 
 import (
+    "html"
     "github.com/gorilla/websocket"
 )
 
@@ -22,7 +23,7 @@ func (client *Client) run() {
         if err != nil {
             break;
         }
-        client.toServer <- string(message)
+        client.toServer <- html.EscapeString(string(message))
     }
 }
 
