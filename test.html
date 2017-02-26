@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<script>
+window.addEventListener("load", function(event) {
+    var output = document.getElementById("output");
+    var input = document.getElementById("input");
+    var websocket;
+
+    var print = function(message) {
+        var div = document.createElement("div");
+        div.innerHTML = message;
+        output.appendChild(div);
+    };
+
+    document.getElementById("open").onclick = function(event) {
+        if (websocket) {
+            return false;
+        }
+
+        websocket = new WebSocket("ws://localhost:8080");
+
+        websocket.onopen = function(event) {
+            print("OPEN");
+        }
+
+        websocket.onclose = function(event) {
+            print("CLOSE");
+            websocket = null;
+        }
+
+        websocket.onmessage = function(event) {
+            print(event.data);
+        }
+
+        websocket.onerror = function(event) {
+            print("ERROR: " + event.data);
+        }
+
+        return false;
+    };
+
+    document.getElementById("send").onclick = function(event) {
+        if (!websocket) {
+            return false;
+        }
+        websocket.send(input.value);
+        return false;
+    };
+
+    document.getElementById("close").onclick = function(event) {
+        if (!websocket) {
+            return false;
+        }
+        websocket.close();
+        return false;
+    };
+});
+</script>
+</head>
+<body>
+<table>
+  <tr>
+    <button id="open">Open</button>
+    <button id="close">Close</button>
+    <input id="input" type="text" value="Hello world!"/>
+    <button id="send">Send</button>
+  </tr>
+  <tr>
+    <div id="output"></div>
+  </tr>
+</table>
+</body>
+</html>
