@@ -14,45 +14,46 @@ window.addEventListener("load", function(event) {
     };
 
     document.getElementById("open").onclick = function(event) {
-        if (websocket) {
-            return false;
-        }
-
-        websocket = new WebSocket("ws://localhost:8080");
-
-        websocket.onopen = function(event) {
-            print("OPEN");
-        }
-
-        websocket.onclose = function(event) {
-            print("CLOSE");
-            websocket = null;
-        }
-
-        websocket.onmessage = function(event) {
-            print(event.data);
-        }
-
-        websocket.onerror = function(event) {
-            print("ERROR: " + event.data);
-        }
-
-        return false;
-    };
-
-    document.getElementById("send").onclick = function(event) {
         if (!websocket) {
-            return false;
+            websocket = new WebSocket("ws://localhost:8080");
+
+            websocket.onopen = function(event) {
+                print("OPEN");
+            }
+
+            websocket.onclose = function(event) {
+                print("CLOSE");
+                websocket = null;
+            }
+
+            websocket.onmessage = function(event) {
+                print(event.data);
+            }
+
+            websocket.onerror = function(event) {
+                print("ERROR: " + event.data);
+            }
         }
-        websocket.send(input.value);
         return false;
     };
+
+    input.onkeypress = function(e) {
+        var event = e || window.event;
+        var charCode = event.which || event.keyCode;
+
+        if ( charCode == '13' ) {
+            if (websocket) {
+                websocket.send(input.value);
+                input.value=""
+            }
+            return false;
+        }
+    }
 
     document.getElementById("close").onclick = function(event) {
-        if (!websocket) {
-            return false;
+        if (websocket) {
+            websocket.close();
         }
-        websocket.close();
         return false;
     };
 });
@@ -64,7 +65,6 @@ window.addEventListener("load", function(event) {
     <button id="open">Open</button>
     <button id="close">Close</button>
     <input id="input" type="text" value="Hello world!"/>
-    <button id="send">Send</button>
   </tr>
   <tr>
     <div id="output"></div>
