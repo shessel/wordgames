@@ -8,11 +8,11 @@ import (
 
 type Server struct {
     clients map[string]*Client
-    input chan string
+    input chan Message
 }
 
 func NewServer() Server {
-    return Server { make(map[string]*Client), make(chan string) }
+    return Server { make(map[string]*Client), make(chan Message) }
 }
 
 func (server *Server) Register(client *Client) {
@@ -77,7 +77,8 @@ func (server *Server) Start() {
 
 func (server *Server) run() {
     for {
-        server.Broadcast(<- server.input)
+        message := <- server.input
+        server.Broadcast(message.Message)
     }
 }
 

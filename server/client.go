@@ -8,11 +8,11 @@ import (
 type Client struct {
     Name string
     conn* websocket.Conn
-    toServer chan string
+    toServer chan Message
 }
 
-func NewClient(name string, conn *websocket.Conn, toServer chan string) *Client {
-    client := &Client{ name, conn, toServer }
+func NewClient(name string, conn *websocket.Conn, toServer chan Message) *Client {
+    client := &Client{ html.EscapeString(name), conn, toServer }
     go client.run()
     return client
 }
@@ -23,7 +23,7 @@ func (client *Client) run() {
         if err != nil {
             break;
         }
-        client.toServer <- client.Name + ": " + html.EscapeString(string(message))
+        client.toServer <- Message{html.EscapeString(string(message)), client}
     }
 }
 
