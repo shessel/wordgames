@@ -11,8 +11,47 @@ type Server struct {
     input chan Message
 }
 
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+    CheckOrigin: func(r *http.Request) bool {
+        return true
+    },
+}
+
 func NewServer() Server {
     return Server { make(map[string]*Client), make(chan Message) }
+}
+
+func (server *Server) Start() {
+    go server.run()
+    http.HandleFunc("/", server.handleConnection)
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func (server *Server) Stop() {
+    for _, client := range server.clients {
+        server.unregisterClient(client)
+    }
+}
+
+func (server *Server) run() {
+    for {
+        message := <- server.input
+        server.broadcast(message.Text)
+    }
+}
+
+func (server *Server) handleConnection(w http.ResponseWriter, r *http.Request) {
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if checkError(err, "upgrade:") {return}
+
+    _, message, err := conn.ReadMessage()
+    if checkError(err, "read:") {return}
+
+    client := NewClient(string(message), conn, server.input)
+    server.registerClient(client)
+    server.runClient(client)
 }
 
 func (server *Server) registerClient(client *Client) {
@@ -40,32 +79,10 @@ func (server *Server) runClient(client *Client) {
     server.unregisterClient(client)
 }
 
-var upgrader = websocket.Upgrader{
-    ReadBufferSize:  1024,
-    WriteBufferSize: 1024,
-    CheckOrigin: func(r *http.Request) bool {
-        return true
-    },
-}
-
 func (server *Server) broadcast(message string) {
     for _, client := range server.clients {
-        if err := client.SendMessage(message); err != nil {
-            log.Print("Error sending message to client " + client.Name)
-        }
+        checkError(client.SendMessage(message), "Error sending message to client " + client.Name)
     }
-}
-
-func (server *Server) NewConnection(w http.ResponseWriter, r *http.Request) {
-    conn, err := upgrader.Upgrade(w, r, nil)
-    if checkError(err, "upgrade:") {return}
-
-    _, message, err := conn.ReadMessage()
-    if checkError(err, "read:") {return}
-
-    client := NewClient(string(message), conn, server.input)
-    server.registerClient(client)
-    server.runClient(client)
 }
 
 func checkError(err error, message string) bool {
@@ -74,23 +91,4 @@ func checkError(err error, message string) bool {
         log.Print(message, err)
     }
     return ret;
-}
-
-func (server *Server) Start() {
-    go server.run()
-    http.HandleFunc("/", server.NewConnection)
-    log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-func (server *Server) run() {
-    for {
-        message := <- server.input
-        server.broadcast(message.Text)
-    }
-}
-
-func (server *Server) Stop() {
-    for _, client := range server.clients {
-        server.unregisterClient(client)
-    }
 }
